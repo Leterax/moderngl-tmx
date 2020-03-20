@@ -1,2 +1,3 @@
 # moderngl_tmx
- ModernGL_TMX allows you to display Tiled Map Editor (.tmx) files
+ ModernGL_TMX allows you to display Tiled Map Editor (`.tmx`) files using moderngl.
+ 
