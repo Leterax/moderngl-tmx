@@ -69,7 +69,6 @@ uniform sampler2DArray texture0;
 
 void main() {
     fragColor = texture(texture0, vec3(uv, gid));
-
 }"""
 
 
@@ -79,7 +78,7 @@ class TileMapVAO:
         self._texture_array = texture_array
 
     def render_layer(self, layer_id: int, matrix, pos: Tuple[int, int] = (0, 0),
-                     advance_animation: bool = True) -> None:
+                     advance_animation: bool = False) -> None:
         vao = self._layer_VAOs[layer_id]
         # vao.program["pos"].value = pos
         vao.program["matrix"].write(matrix)
@@ -91,7 +90,7 @@ class TileMapVAO:
         pass
 
 
-def load_level(level_path: Path, chunk_size: Tuple[int, int], ctx: moderngl.context) -> TileMapVAO:
+def load_level(level_path: Path, ctx: moderngl.context) -> TileMapVAO:
     # load the level from the file
     tile_map = pytiled_parser.parse_tile_map(level_path)
 
@@ -111,9 +110,11 @@ def load_level(level_path: Path, chunk_size: Tuple[int, int], ctx: moderngl.cont
     images = [Image.open(image_path).resize(tile_map.tile_size).convert('RGBA') for image_path in image_paths]
     combined_image = np.vstack((np.asarray(i) for i in images))
 
+    # create the texture array
     texture_array = ctx.texture_array((*tile_map.tile_size, num_layers), 4, combined_image)
     texture_array.filter = moderngl.NEAREST, moderngl.NEAREST
     texture_array.use(0)
+    # create a list of vaos; one for each layer
     vaos = [_create_vao(layer_id, tile_map, ctx) for layer_id in range(len(tile_map.layers))]
     return TileMapVAO(vaos, texture_array)
 
@@ -125,6 +126,7 @@ def _create_vao(layer_id: int, tile_map: TileMap, ctx):
                           fragment_shader=fragment_shader
                           )
     program['texture0'] = 0
+    program['size'] = float(tile_map.tile_size.width)
 
     if type(layer) is ObjectLayer:
         layer: ObjectLayer
@@ -158,6 +160,7 @@ def _create_vao(layer_id: int, tile_map: TileMap, ctx):
 
         pos_buffer = ctx.buffer(np.array(pos).astype(np.float32))
         id_buffer = ctx.buffer(np.array(ids).astype(np.int32))
+
         vao = ctx.vertex_array(
             program, [
                 (pos_buffer, '2f4', 'in_position'),
