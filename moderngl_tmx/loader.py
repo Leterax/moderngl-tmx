@@ -162,7 +162,7 @@ def _create_vao(layer_id: int, tile_map: TileMap, ctx):
                 if layer.data[y][x] > 0:
                     pos.append((
                         x * tile_map.tile_size.width + tile_map.tile_size.width // 2,
-                        y * -tile_map.tile_size.height + tile_map.tile_size.height // 2 + tile_map.tile_size.height * layer.size.height
+                        y * -tile_map.tile_size.height - tile_map.tile_size.height // 2 + tile_map.tile_size.height * layer.size.height
                     ))
                     ids.append(layer.data[y][x] - 1)
 
