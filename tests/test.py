@@ -3,6 +3,7 @@ from pathlib import Path
 import moderngl_window as mglw
 from pyrr import Matrix44
 
+import moderngl
 import moderngl_tmx as tmx
 
 
@@ -31,6 +32,7 @@ class TileTest(mglw.WindowConfig):
 
     def render(self, time: float, frame_time: float) -> None:
         self.ctx.clear()
+        self.ctx.enable(moderngl.BLEND)
 
         self.level.render_layer(layer_id=1, projection=self.proj, pos=self.position)
         self.level.render_layer(layer_id=0, projection=self.proj, pos=self.position)

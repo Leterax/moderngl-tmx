@@ -118,7 +118,10 @@ def load_level(level_path: Path, ctx: moderngl.context) -> TileMapVAO:
 
     # create the texture array
     texture_array = ctx.texture_array((*tile_map.tile_size, num_layers), 4, combined_image)
-    texture_array.filter = moderngl.NEAREST, moderngl.NEAREST
+    texture_array.repeat_x = False
+    texture_array.repeat_y = False
+    texture_array.build_mipmaps()
+    texture_array.filter = moderngl.LINEAR, moderngl.LINEAR_MIPMAP_LINEAR
     texture_array.use(0)
     # create a list of vaos; one for each layer
     vaos = [_create_vao(layer_id, tile_map, ctx) for layer_id in range(len(tile_map.layers))]
