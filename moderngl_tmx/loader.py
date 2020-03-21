@@ -11,12 +11,11 @@ vertex_shader = """
 #version 330
 in vec2 in_position;
 in int gid;
+uniform vec2 pos;
 out int out_gid;
 
-uniform mat4 matrix;
-
 void main() {
-    gl_Position = matrix * vec4(in_position, 0., 1.0);
+    gl_Position = vec4(in_position + pos, 0., 1.0);
     out_gid = gid;
 }"""
 geometry_shader = """
@@ -27,6 +26,7 @@ layout (triangle_strip, max_vertices = 4) out;
 in int out_gid[1];
 
 uniform float size;
+uniform mat4 projection;
 
 out vec2 uv;
 flat out int gid;
@@ -37,23 +37,23 @@ void main() {
     vec2 in_position = gl_in[0].gl_Position.xy;
     vec2 pos = in_position;
 
-    vec2 right = vec2(1.0, 0.0) * size;
-    vec2 up = vec2(0.0, 1.0) * size;
+    vec2 right = vec2(1.0, 0.0) * size / 2;
+    vec2 up = vec2(0.0, 1.0) * size / 2;
 
     uv = vec2(1.0, 1.0);
-    gl_Position = vec4(pos + (right + up), 0.0, 1.0);
+    gl_Position = projection * vec4(pos + (right + up), 0.0, 1.0);
     EmitVertex();
 
     uv = vec2(0.0, 1.0);
-    gl_Position = vec4(pos + (-right + up), 0.0, 1.0);
+    gl_Position = projection * vec4(pos + (-right + up), 0.0, 1.0);
     EmitVertex();
 
     uv = vec2(1.0, 0.0);
-    gl_Position = vec4(pos + (right - up), 0.0, 1.0);
+    gl_Position = projection * vec4(pos + (right - up), 0.0, 1.0);
     EmitVertex();
 
     uv = vec2(0.0, 0.0);
-    gl_Position = vec4(pos + (-right - up), 0.0, 1.0);
+    gl_Position = projection * vec4(pos + (-right - up), 0.0, 1.0);
     EmitVertex();
 
     EndPrimitive();
@@ -68,8 +68,9 @@ flat in int gid;
 uniform sampler2DArray texture0;
 
 void main() {
-    fragColor = texture(texture0, vec3(uv, gid));
-}"""
+    fragColor = texture(texture0, vec3(uv, gid - textureSize(texture0, 0).z));
+}
+"""
 
 
 class TileMapVAO:
@@ -80,11 +81,12 @@ class TileMapVAO:
     def render_layer(self, layer_id: int, matrix, pos: Tuple[int, int] = (0, 0),
                      advance_animation: bool = False) -> None:
         vao = self._layer_VAOs[layer_id]
-        # vao.program["pos"].value = pos
-        vao.program["matrix"].write(matrix)
+        vao.program["pos"].value = pos
+        vao.program["projection"].write(matrix)
         if advance_animation:
             vao.program["animation"] += 1
-        vao.render()
+
+        vao.render(mode=moderngl.POINTS)
 
     def render_all(self, pos: Tuple[int, int] = (0, 0), advance_animation: bool = False) -> None:
         pass
@@ -109,6 +111,10 @@ def load_level(level_path: Path, ctx: moderngl.context) -> TileMapVAO:
 
     images = [Image.open(image_path).resize(tile_map.tile_size).convert('RGBA') for image_path in image_paths]
     combined_image = np.vstack((np.asarray(i) for i in images))
+
+    # Quick test displaying the generated texture array with pillow
+    # test = Image.frombuffer('RGBA', (tile_map.tile_size[0], tile_map.tile_size[1] * num_layers), combined_image)
+    # test.show()
 
     # create the texture array
     texture_array = ctx.texture_array((*tile_map.tile_size, num_layers), 4, combined_image)
