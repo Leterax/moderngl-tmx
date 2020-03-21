@@ -145,8 +145,8 @@ def _create_vao(layer_id: int, tile_map: TileMap, ctx):
             pos.append(tiled_object.location)
             ids.append(tiled_object.gid)
 
-        pos_buffer = ctx.buffer(np.array(pos).astype(np.float32))
-        id_buffer = ctx.buffer(np.array(ids).astype(np.int32))
+        pos_buffer = ctx.buffer(np.array(pos, dtype=np.float32))
+        id_buffer = ctx.buffer(np.array(ids, dtype=np.int32))
         vao = ctx.vertex_array(
             program, [
                 (pos_buffer, '2f4', 'in_position'),
