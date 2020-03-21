@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Tuple
+from typing import Mapping, Tuple
 
 from PIL import Image
 import numpy as np
@@ -74,7 +74,7 @@ void main() {
 
 
 class TileMapVAO:
-    def __init__(self, layer_vaos: List[moderngl.VertexArray], texture_array: moderngl.TextureArray):
+    def __init__(self, layer_vaos: Mapping[int, moderngl.VertexArray], texture_array: moderngl.TextureArray):
         self._layer_VAOs = layer_vaos
         self._texture_array = texture_array
 
@@ -89,7 +89,7 @@ class TileMapVAO:
         vao.render(mode=moderngl.POINTS)
 
     def render_all(self, projection, pos: Tuple[int, int] = (0, 0), advance_animation: bool = False) -> None:
-        for vao in self._layer_VAOs:
+        for vao in self._layer_VAOs.values():
             vao.program["pos"].value = pos
             vao.program["projection"].write(projection)
             if advance_animation:
@@ -130,12 +130,16 @@ def load_level(level_path: Path, ctx: moderngl.context) -> TileMapVAO:
     texture_array.build_mipmaps()
     texture_array.filter = moderngl.LINEAR, moderngl.LINEAR_MIPMAP_LINEAR
     texture_array.use(0)
+
     # create a list of vaos; one for each layer
     vaos = [_create_vao(layer_id, tile_map, ctx) for layer_id in range(len(tile_map.layers))]
+    # sort them by their id and store them in a dict
+    vaos = dict(sorted(vaos, key=lambda item: item[0]))
+
     return TileMapVAO(vaos, texture_array)
 
 
-def _create_vao(layer_id: int, tile_map: TileMap, ctx):
+def _create_vao(layer_id: int, tile_map: TileMap, ctx) -> Tuple[int, moderngl.VertexArray]:
     layer: Layer = tile_map.layers[layer_id]
     program = ctx.program(vertex_shader=vertex_shader,
                           geometry_shader=geometry_shader,
@@ -160,7 +164,7 @@ def _create_vao(layer_id: int, tile_map: TileMap, ctx):
                 (id_buffer, 'i', 'gid')
             ]
         )
-        return vao
+        return layer.id_, vao
 
     elif type(layer) is TileLayer:
         layer: TileLayer
@@ -185,4 +189,5 @@ def _create_vao(layer_id: int, tile_map: TileMap, ctx):
                 (id_buffer, 'i', 'gid')
             ]
         )
-        return vao
+
+        return layer.id_, vao

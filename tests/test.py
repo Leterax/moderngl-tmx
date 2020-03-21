@@ -24,7 +24,7 @@ class TileTest(mglw.WindowConfig):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-
+        
         self.level = tmx.load_level(self.resource_dir / 'examples/arcade_example' / 'map_with_ladders.tmx',
                                     ctx=self.ctx)
         self.zoom_level = 5.0  # For zooming the projection
