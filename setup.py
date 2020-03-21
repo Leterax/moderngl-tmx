@@ -6,7 +6,7 @@ setup(
     description="moderngl-tmx allows you to display Tiled Map Editor (.tmx) files ",
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url="https://github.com/Leterax/moderngl_tmx",
+    url="https://github.com/Leterax/moderngl-tmx",
     author="Leterax",
     author_email="leterax@leterax.com",
     packages=find_namespace_packages(include=['moderngl_tmx', 'moderngl_tmx.*']),

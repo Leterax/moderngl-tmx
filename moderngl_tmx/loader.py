@@ -88,8 +88,14 @@ class TileMapVAO:
 
         vao.render(mode=moderngl.POINTS)
 
-    def render_all(self, pos: Tuple[int, int] = (0, 0), advance_animation: bool = False) -> None:
-        pass
+    def render_all(self, projection, pos: Tuple[int, int] = (0, 0), advance_animation: bool = False) -> None:
+        for vao in self._layer_VAOs:
+            vao.program["pos"].value = pos
+            vao.program["projection"].write(projection)
+            if advance_animation:
+                vao.program["animation"] += 1
+
+            vao.render(mode=moderngl.POINTS)
 
 
 def load_level(level_path: Path, ctx: moderngl.context) -> TileMapVAO:
@@ -109,7 +115,8 @@ def load_level(level_path: Path, ctx: moderngl.context) -> TileMapVAO:
         path = level_path.parent / image.source
         image_paths.append(path)
 
-    images = [Image.open(image_path).resize(tile_map.tile_size).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM) for image_path in image_paths]
+    images = [Image.open(image_path).resize(tile_map.tile_size).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM) for
+              image_path in image_paths]
     combined_image = np.vstack((np.asarray(i) for i in images))
 
     # Quick test displaying the generated texture array with pillow

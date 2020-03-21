@@ -2,8 +2,8 @@ from pathlib import Path
 
 import moderngl_window as mglw
 from pyrr import Matrix44
-
 import moderngl
+
 import moderngl_tmx as tmx
 
 
@@ -20,26 +20,29 @@ class TileTest(mglw.WindowConfig):
     resource_dir = (Path(__file__) / '../resources').absolute()
     aspect_ratio = None
     window_size = 1280, 720
-    samples = 4
+    samples = 16
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        self.level = tmx.load_level(self.resource_dir / 'examples/arcade_example' / 'map.tmx', ctx=self.ctx)
+        self.level = tmx.load_level(self.resource_dir / 'examples/arcade_example' / 'map_with_ladders.tmx',
+                                    ctx=self.ctx)
         self.zoom_level = 5.0  # For zooming the projection
-        self.position = 0, 0   # For moving the map around with mouse
+        self.position = 0, 0  # For moving the map around with mouse
         self.resize(*self.wnd.buffer_size)
 
     def render(self, time: float, frame_time: float) -> None:
         self.ctx.clear()
         self.ctx.enable(moderngl.BLEND)
 
-        self.level.render_layer(layer_id=1, projection=self.proj, pos=self.position)
-        self.level.render_layer(layer_id=0, projection=self.proj, pos=self.position)
+        # self.level.render_layer(layer_id=1, projection=self.proj, pos=self.position)
+        # self.level.render_layer(layer_id=0, projection=self.proj, pos=self.position)
+        self.level.render_all(projection=self.proj, pos=self.position)
 
     def mouse_drag_event(self, x, y, dx, dy):
         """Move the map around"""
-        self.position = self.position[0] + dx, self.position[1] - dy
+        self.position = ((self.position[0] + dx / (1 / self.zoom_level)),
+                         (self.position[1] - dy / (1 / self.zoom_level)))
 
     def mouse_scroll_event(self, x, y):
         """Basic projection scaling"""
