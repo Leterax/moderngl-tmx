@@ -148,12 +148,18 @@ def _create_vao(layer_id: int, tile_map: TileMap, ctx) -> Tuple[int, moderngl.Ve
     program['texture0'] = 0
     program['size'] = float(tile_map.tile_size.width)
 
+    map_size_pixels = (
+        tile_map.map_size.width * tile_map.tile_size.width,
+        tile_map.map_size.height * tile_map.tile_size.height
+    )
+
     if type(layer) is ObjectLayer:
         layer: ObjectLayer
         pos = []
         ids = []
         for tiled_object in layer.tiled_objects:
-            pos.append(tiled_object.location)
+            object_position = tiled_object.location.x, map_size_pixels[1] - tiled_object.location.y
+            pos.append(object_position)
             ids.append(tiled_object.gid)
 
         pos_buffer = ctx.buffer(np.array(pos, dtype=np.float32))
